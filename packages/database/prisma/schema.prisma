@@ -1,0 +1,108 @@
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "postgresql"
+}
+
+model User {
+    id          String @id
+    clerkId     String @unique
+    email       String @unique
+    username    String @unique
+    avatarUrl   String?
+    deletedAt   DateTime?
+    createdAt   DateTime @default(now())
+    updatedAt   DateTime @updatedAt
+    ownedLanes  Lane[] @relation("LaneOwner")
+    memberships LaneMember[]
+    messages    ChatMessage[]
+    auditLogs   AuditLog[]
+    @@index([email])
+    @@index([clerkId])
+}
+
+model Lane {
+    id      String @id
+    slug    String @unique
+    title String
+    description String?
+    settings Json @default("{}")
+    ownerId String
+    owner User @relation("LaneOwner", fields: [ownerId], references: [id])
+    version Int @default(1)
+    isActive Boolean @default(true)
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+    members LaneMember[]
+    messages ChatMessage[]
+    snapshots WhiteboardSnapshot[]
+    webhooks WebhookConfig[]
+    @@index([ownerId])
+    @@index([slug])
+}
+
+enum LaneRole {
+    OWNER
+    MODERATOR
+    CONTRIBUTOR
+    OBSERVER
+}
+
+model LaneMember {
+    id String @id
+    laneId String
+    userId String
+    role LaneRole @default(OBSERVER)
+    joinedAt DateTime @default(now())
+    lane Lane @relation(fields: [laneId], references: [id], onDelete: Cascade)
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+    @@unique([laneId, userId])
+    @@index([userId])
+    @@index([laneId])
+}
+
+model ChatMessage {
+    id String @id
+    laneId String
+    userId String
+    content String
+    metadata Json?
+    createdAt DateTime @default(now())
+    lane Lane @relation(fields: [laneId], references: [id], onDelete: Cascade)
+    user User @relation(fields: [userId], references: [id])
+    @@index([laneId, createdAt(sort: Desc)])
+}
+
+model WhiteboardSnapshot {
+    id String @id
+    laneId String
+    data Bytes
+    version Int
+    createdAt DateTime @default(now())
+    lane Lane @relation(fields: [laneId], references: [id], onDelete: Cascade)
+    @@index([laneId, version])
+}
+
+model WebhookConfig {
+    id String @id
+    laneId String
+    url String
+    secret String
+    events String[]
+    isActive Boolean @default(true)
+    lane Lane @relation(fields: [laneId], references: [id])
+    @@index([laneId])
+}
+
+model AuditLog {
+    id String @id
+    userId String 
+    action String
+    resource String
+    ipAddress String
+    userAgent String?
+    createdAt DateTime @default(now())
+    user User @relation(fields: [userId], references: [id])
+}
