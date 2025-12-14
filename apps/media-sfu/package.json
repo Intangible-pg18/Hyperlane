@@ -1,0 +1,11 @@
+{
+  "name": "media-sfu",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "air", 
+    "build": "go build -o bin/server ./cmd/server",
+    "lint": "golangci-lint run",
+    "test": "go test ./..."
+  }
+}
