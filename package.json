@@ -1,0 +1,22 @@
+{
+  "name": "hyperlane-monorepo",
+  "version": "1.0.0",
+  "description": "",
+  "private": true,
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "format": "prettier --write \"**/*.{ts, tsx, md}\""
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.25.0",
+  "devDependencies": {
+    "@types/node": "^25.0.1",
+    "prettier": "^3.7.4",
+    "turbo": "^2.6.3",
+    "typescript": "^5.9.3"
+  }
+}
