@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+package media.v1;
+
+option go_package = "github.com/hyperlane/monorepo/packages/contracts/gen/go/media/v1;mediav1";
+
+message CreateRoomRequest {
+    string lane_id = 1;
+    bool enable_recording = 2;
+    string codec_preference = 3; //vp8/h264/av1
+}
+
+message CreateRoomResponse {
+    string sfu_ip = 1; //which media node handled this
+    int32 upd_port = 2;
+    string connection_token = 3; //for the frontend to connect via WebRTC
+}
+
+message GetRoomStatsRequest {
+    string lane_id = 1;
+}
+
+message GetRoomStatsResponse {
+    int32 participant_count = 1;
+    double total_bitrate_mbps = 2;
+    double cpu_usage_percent = 3;
+}
+
+service MediaService {
+    //this also initializes a WebRTC router on the SFU
+    rpc CreateRoom(CreateRoomRequest) returns (CreateRoomResponse);
+
+    //returns bitrate/packate-loss metrics
+    rpc GetRoomStats(GetRoomStatsRequest) returns (GetRoomStatsResponse);
+}

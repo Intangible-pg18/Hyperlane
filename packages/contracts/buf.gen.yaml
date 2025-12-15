@@ -1,0 +1,21 @@
+version: v1
+plugins:
+  # Generate Typescript types
+  - plugin: buf.build/bufbuild/es
+    out: dist
+    opt: target=ts
+
+  # Generate TS Clint/Server Stubs using ConnectRPC
+  - plugin: buf.build/connectrpc/es
+    out: dist
+    opt: target=ts
+
+  # Generate Go Structs
+  - plugin: buf.build/protocolbuffers/go
+    out: gen/go
+    opt: paths=source_relative
+
+  # Generates Go Clint/Server Stubs using ConnectRPC
+  - plugin: buf.build/connectrpc/go
+    out: gen/go
+    opt: paths=source_relative

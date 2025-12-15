@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package auth.v1;
+
+option go_package = "github.com/hyperlane/monorepo/packages/contarcts/gen/go/auth/v1;authv1";
+
+message ValidateSessionRequest {
+    string token = 1;
+    string required_scope = 2;
+}
+
+message ValidateSessionResponse {
+    bool valid = 1;
+    string user_id = 2;
+    string username = 3;
+    string avatar_url = 4;
+    repeated string roles = 5;
+    //Extensibility
+    map<string, string> extra_claims = 6;
+}
+
+service AuthService {
+    //checks if a token is valid and returns user claims
+    rpc ValidateSession (ValidateSessionRequest) returns (ValidateSessionResponse);
+}
