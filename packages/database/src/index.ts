@@ -4,6 +4,8 @@ import {Pool} from "pg";
 
 //setting up connection pool
 const connectionString = `${process.env.DATABASE_URL}`;
+
+console.log("DEBUG: Database Connection String:", connectionString);
 const pool = new Pool({connectionString});
 
 const adapter = new PrismaPg(pool);

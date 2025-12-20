@@ -6,6 +6,15 @@ import cookieParser from "cookie-parser"
 import hpp from "hpp";
 import {createLogger} from "@hyperlane/logger"
 import { randomUUID } from "node:crypto";
+import { handleClerkWebhook } from "./controllers/webhook.controller.js";
+
+declare global {
+  namespace Express {
+    interface Request {
+      rawBody?: Buffer;
+    }
+  }
+}
 
 const logger = createLogger("auth-service")
 
@@ -43,12 +52,16 @@ app.use(cors({
     origin: IS_PROD ? process.env.ALLOWED_ORIGINS?.split(",") : "*",
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-type", "Authorization", "x-request-id"]
+    allowedHeaders: ["Content-Type", "Authorization", "x-request-id", "svix-id", "svix-timestamp", "svix-signature"]
 }));
 
 app.use(compression());
 //file size limit to prevent dos attack
-app.use(express.json({limit: "10kb"}));
+app.use(express.json({limit: "10kb", 
+  verify: (req: Request, res: Response, buf: Buffer) => {
+    req.rawBody = buf;
+  }
+}));
 app.use(express.urlencoded({ extended: true, limit: "10kb"}))
 app.use(cookieParser());
 
@@ -82,6 +95,8 @@ app.get("/health", (req, res) => {
     res.status(200).json({status: "ok", service: "auth-service", timestamp: new Date().toISOString()});
 })
 
+app.post("/api/webhooks/clerk", handleClerkWebhook)
+
 //404 handler (for unknown routes)
 app.use((req: Request, res: Response) => {
     res.status(404).json({
@@ -104,12 +119,9 @@ const server = app.listen(PORT, () => {
     logger.info(`Auth Service running on port ${PORT}`);
 })
 
-//-----------------------------------------------------------------------------------
-// HYPERSCALE: Keep-Alive Timeout Sync
-// AWS ALB default timeout is 60s. Node must be slightly higher (65s)
-// to prevent "502 Bad Gateway" errors during race conditions.
-server.keepAliveTimeout = 65000; // 65 seconds
-server.headersTimeout = 66000;   // 66 seconds
+//Keep-Alive Timeout Sync
+server.keepAliveTimeout = 65000; 
+server.headersTimeout = 66000;   
 
 //graceful shutdown 
 const shutdown = (signal: string) => {
