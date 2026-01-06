@@ -26,6 +26,12 @@ importers:
       '@clerk/backend':
         specifier: ^2.28.0
         version: 2.28.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+      '@connectrpc/connect':
+        specifier: ^2.1.1
+        version: 2.1.1(@bufbuild/protobuf@2.10.2)
+      '@connectrpc/connect-node':
+        specifier: ^2.1.1
+        version: 2.1.1(@bufbuild/protobuf@2.10.2)(@connectrpc/connect@2.1.1(@bufbuild/protobuf@2.10.2))
       compression:
         specifier: ^1.8.1
         version: 1.8.1
@@ -281,6 +287,13 @@ packages:
   '@clerk/types@4.101.8':
     resolution: {integrity: sha512-hJobP3FvvuMS5EoaQZmupmLDf5bxOv9ZDXiJ2heSoqUWZaQxLFOfzaOXTKNV9oF5yJwvYijh1cW0LxXZP2O9aA==}
     engines: {node: '>=18.17.0'}
+
+  '@connectrpc/connect-node@2.1.1':
+    resolution: {integrity: sha512-s3TfsI1XF+n+1z6MBS9rTnFsxxR4Rw5wmdEnkQINli81ESGxcsfaEet8duzq8LVuuCupmhUsgpRo0Nv9pZkufg==}
+    engines: {node: '>=20'}
+    peerDependencies:
+      '@bufbuild/protobuf': ^2.7.0
+      '@connectrpc/connect': 2.1.1
 
   '@connectrpc/connect@2.1.1':
     resolution: {integrity: sha512-JzhkaTvM73m2K1URT6tv53k2RwngSmCXLZJgK580qNQOXRzZRR/BCMfZw3h+90JpnG6XksP5bYT+cz0rpUzUWQ==}
@@ -2116,6 +2129,11 @@ snapshots:
     transitivePeerDependencies:
       - react
       - react-dom
+
+  '@connectrpc/connect-node@2.1.1(@bufbuild/protobuf@2.10.2)(@connectrpc/connect@2.1.1(@bufbuild/protobuf@2.10.2))':
+    dependencies:
+      '@bufbuild/protobuf': 2.10.2
+      '@connectrpc/connect': 2.1.1(@bufbuild/protobuf@2.10.2)
 
   '@connectrpc/connect@2.1.1(@bufbuild/protobuf@2.10.2)':
     dependencies:

@@ -1,3 +1,4 @@
+import "dotenv/config"; // Loading env vars before anything else
 import express, { Request, Response, NextFunction } from "express";
 import helmet from "helmet"
 import cors from "cors"
@@ -7,6 +8,7 @@ import hpp from "hpp";
 import {createLogger} from "@hyperlane/logger"
 import { randomUUID } from "node:crypto";
 import { handleClerkWebhook } from "./controllers/webhook.controller.js";
+import { startGrpcServer } from "./grpc/server.js";
 
 declare global {
   namespace Express {
@@ -115,28 +117,60 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   });
 });
 
-const server = app.listen(PORT, () => {
+// Server Start (Dual Protocol)
+const httpServer = app.listen(PORT, () => {
     logger.info(`Auth Service running on port ${PORT}`);
 })
 
 //Keep-Alive Timeout Sync
-server.keepAliveTimeout = 65000; 
-server.headersTimeout = 66000;   
+httpServer.keepAliveTimeout = 65000; 
+httpServer.headersTimeout = 66000;   
+
+// Starting gRPC Server
+let stopGrpcServer: () => Promise<void>;
+
+try {
+  stopGrpcServer = startGrpcServer();
+} catch (err) {
+  logger.fatal({ err }, "Failed to start gRPC server");
+  process.exit(1);
+}
 
 //graceful shutdown 
-const shutdown = (signal: string) => {
-    logger.info(`Received ${signal}. Shutting down gracefully...`);
-    server.close(() => { //stop accepting new connections and wait for current ones to finish
-        logger.info("HTTP server closed.");
-        process.exit(0);
+const shutdown = async (signal: string) => {
+  logger.info(`Received ${signal}. Starting graceful shutdown...`);
+  const shutdownPromises: Promise<void>[] = [];
+  // Stopping REST
+  shutdownPromises.push(new Promise((resolve) => {
+    httpServer.close(() => {
+      logger.info("REST server closed.");
+      resolve();
     });
+  }));
+  // Stopping gRPC
+  if (stopGrpcServer) {
+    shutdownPromises.push(stopGrpcServer().then(() => {
+      logger.info("gRPC server closed.");
+    }));
+  }
 
-    //force exit if it takes too long (10s)
-    setTimeout(() => {
-        logger.error("Could not close connection in time, forcefully shutting down");
-        process.exit(1);
-    }, 10000);
+  try {
+    await Promise.all(shutdownPromises);
+    logger.info("All services stopped. Exiting.");
+    process.exit(0);
+  }
+  catch(err) {
+    logger.error({err}, "Shutdown failed");
+    process.exit(1);
+  }
 };
+
+// Force exiting if shutdown takes too long
+const forceShutdown = setTimeout(() => {
+  logger.error("Forcefully shutting down due to timeout");
+  process.exit(1);
+}, 10000);
+forceShutdown.unref(); //so that node doesnt wait for the timer in case of normal shutdown
 
 process.on("SIGTERM", () => shutdown("SIGTERM"));
 process.on("SIGINT", () => shutdown("SIGINT"));

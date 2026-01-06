@@ -48,6 +48,7 @@ enum LaneRole {
     MODERATOR
     CONTRIBUTOR
     OBSERVER
+    BANNED
 }
 
 model LaneMember {
